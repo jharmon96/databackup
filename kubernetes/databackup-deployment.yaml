@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: databackup
+  name: databackup
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: databackup
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: /snap/kompose/19/kompose-linux-amd64 convert -f docker-compose.yml
+        kompose.version: 1.21.0 (992df58d8)
+      labels:
+        io.kompose.service: databackup
+    spec:
+      nodeSelector:
+        arch: {{ .Values.databackup.architecture }}
+      containers:
+      - env:
+        - name: DEPLOYMENT
+          value: {{ .Values.deployment }}
+        - name: CUSTOMER_NAME
+          value: {{ .Values.customerName }}
+        - name: POSTGRES_DB
+          value: {{ .Values.databackup.postgresDb }}
+        - name: POSTGRES_HOSTNAME
+          value: "postgres.{{ .Values.customerName }}.svc.cluster.local"
+        - name: POSTGRES_USER
+          value: {{ .Values.databackup.postgresUser }}
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "db-secret"
+              key: "password"
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: "db-secret"
+              key: "password"
+        - name: RCLONE_REMOTE_NAME
+          value: {{ .Values.databackup.rclone.remoteName }}
+        - name: RCLONE_AT_TOKEN_TYPE
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.databackup.rclone.secretName }}
+              key: "RCLONE_AT_TOKEN_TYPE"
+        - name: RCLONE_AT_REFRESH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.databackup.rclone.secretName }}
+              key: "RCLONE_AT_REFRESH_TOKEN"
+        - name: RCLONE_AT_EXPIRY
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.databackup.rclone.secretName }}
+              key: "RCLONE_AT_EXPIRY"
+        - name: RCLONE_DRIVE_ID
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.databackup.rclone.secretName }}
+              key: "RCLONE_DRIVE_ID"
+        - name: RCLONE_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.databackup.rclone.secretName }}
+              key: "RCLONE_ACCESS_TOKEN"
+        - name: WEEKS_TO_KEEP
+          value: "{{ .Values.databackup.weeksToKeep }}"
+        - name: DAYS_TO_KEEP
+          value: "{{ .Values.databackup.daysToKeep }}"
+        - name: DAY_OF_WEEK_TO_KEEP
+          value: "{{ .Values.databackup.dayOfWeekToKeep }}"
+        - name: CRON_RUN_MINUTE
+          value: "{{ .Values.databackup.cronRunMinute }}"
+        - name: CRON_RUN_HOUR
+          value: "{{ .Values.databackup.cronRunHour }}"
+        - name: RCLONE_REMOTE_PATH
+          value: "customers/{{ .Values.customerName }}/postgres"
+        - name: RCLONE_REMOTE_TYPE
+          value: {{ .Values.databackup.rclone.remoteType }}
+        - name: RCLONE_DRIVE_TYPE
+          value: {{ .Values.databackup.rclone.driveType }}
+        - name: RCLONE_SCOPE
+          value: {{ .Values.databackup.rclone.Scope }}
+        - name: GIT_SSH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.databackup.git.secretName }}
+              key: "GIT_SSH_TOKEN"
+        image: "{{ .Values.databackup.imageName }}:databackup-{{ .Values.deployment }}-{{ .Values.databackup.architecture }}-{{ .Values.databackup.version }}"
+        imagePullPolicy: Always
+        name: databackup
+        resources: {}
+        volumeMounts:
+        - name: "volume-{{ .Values.customerName }}"
+          mountPath: /notebooks
+          subPath: {{ .Values.customerName }}/notebooks
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+      - name: "volume-{{ .Values.customerName }}"
+        persistentVolumeClaim:
+          claimName: "volume-{{ .Values.customerName }}"
+      imagePullSecrets:
+        - name: regcred
+status: {}

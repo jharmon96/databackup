@@ -1,0 +1,38 @@
+# Default values for databackup
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+#
+customerName: test
+# Options are dev or prod
+deployment: prod
+############################################################
+db:
+  version: "5"
+  architecture: arm64v8
+############################################################
+databackup:
+  version: "1"
+  image: timetobuild/databackup
+  postgresDb: testdb
+  postgresUser: test_user
+  architecture: amd64
+  #####
+  ## Times are in UTC
+  #####
+  weeksToKeep: "1"
+  daysToKeep: "7"
+  dayOfWeekToKeep: "6"
+  cronRunMinute: "0"
+  cronRunHour: "23"
+  #####
+  ## Rclone is a CLI tool for syncing with cloud storage
+  #####
+  rclone:
+    remoteName: eerpBackup
+    remoteType: onedrive
+    driveType: personal
+    scope: onedrive
+    ## Used for Access Token values
+    secretName: rclone-secret
+  git:
+    secretName: git-secret
