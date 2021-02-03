@@ -1,0 +1,28 @@
+pg_backup:
+  image: extendederp/pgbackup:latest
+  volumes:
+    - ./config:/config
+    - /nfs/linux-dev/jack/notebooks:/notebooks
+    - /etc/localtime:/etc/localtime:ro
+  environment:
+    - CUSTOMER=jack
+    - POSTGRES_HOSTNAME=
+    - POSTGRES_PORT=5432
+    - POSTGRES_USER=extendederp_user
+    - POSTGRES_PASSWORD=
+    - PGPASSWORD=password
+    - WEEKS_TO_KEEP=4
+    - DAYS_TO_KEEP=7
+    - DAY_OF_WEEK_TO_KEEP=6
+    - CRON_RUN_MINUTE=56
+    - CRON_RUN_HOUR=17
+    - RCLONE_REMOTE_NAME=eerpBackup
+    - RCLONE_REMOTE_PATH=customers/jack/postgres
+    - RCLONE_REMOTE_TYPE=onedrive
+    - RCLONE_ACCESS_TOKEN=
+    - RCLONE_AT_TOKEN_TYPE=Bearer
+    - RCLONE_AT_REFRESH_TOKEN=
+    - RCLONE_AT_EXPIRY=
+    - RCLONE_DRIVE_ID=
+    - RCLONE_DRIVE_TYPE=personal
+    - RCLONE_SCOPE=onedrive
